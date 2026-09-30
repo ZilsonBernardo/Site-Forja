@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forja — Desenvolvimento Físico e Mental</title>
+<style>
+  /* ============ RESET & BASE ============ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0e13;
+    --bg-alt: #10161e;
+    --surface: #151d27;
+    --surface-2: #1c2632;
+    --border: #253243;
+    --text: #e6edf3;
+    --text-dim: #93a3b5;
+    --accent: #4ade80;
+    --accent-2: #38bdf8;
+    --accent-3: #fbbf24;
+    --accent-4: #f472b6;
+    --radius: 16px;
+    --shadow: 0 10px 40px rgba(0,0,0,.45);
+  }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ============ SCROLL PROGRESS ============ */
+  #progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    z-index: 999; transition: width .1s linear;
+  }
+
+  /* ============ NAV ============ */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+    background: rgba(10,14,19,.85);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 24px; height: 68px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-weight: 800; font-size: 1.25rem; letter-spacing: -.5px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-mark {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center;
+    font-size: .95rem; color: #04121a; font-weight: 900;
+  }
+  .nav-links { display: flex; gap: 6px; list-style: none; }
+  .nav-links a {
+    color: var(--text-dim); text-decoration: none;
+    font-size: .88rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 10px;
+    transition: .2s;
+  }
+  .nav-links a:hover, .nav-links a.active {
+    color: var(--text); background: var(--surface-2);
+  }
+  .nav-links a.active { color: var(--accent); }
+
+  .burger {
+    display: none; background: none; border: 1px solid var(--border);
+    color: var(--text); width: 42px; height: 42px; border-radius: 11px;
+    font-size: 1.2rem; cursor: pointer;
+  }
+
+  /* ============ HERO ============ */
+  header.hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 120px 24px 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(700px 400px at 15% 20%, rgba(74,222,128,.13), transparent 70%),
+      radial-gradient(700px 400px at 85% 70%, rgba(56,189,248,.13), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; position: relative; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 7px 16px; border-radius: 100px;
+    font-size: .8rem; color: var(--accent); font-weight: 600;
+    margin-bottom: 26px;
+  }
+  .badge::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 10px var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+  h1 {
+    font-size: clamp(2.4rem, 6.5vw, 4.6rem);
+    line-height: 1.05; letter-spacing: -2px; font-weight: 800;
+    margin-bottom: 24px;
+  }
+  h1 .grad {
+    background: linear-gradient(120deg, var(--accent), var(--accent-2) 60%, var(--accent-4));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p.lead {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: var(--text-dim); max-width: 640px; margin-bottom: 40px;
+  }
+  .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 14px 28px; border-radius: 13px;
+    font-weight: 700; font-size: .95rem; text-decoration: none;
+    border: 1px solid transparent; cursor: pointer;
+    transition: .25s; font-family: inherit;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #22c55e);
+    color: #04121a;
+    box-shadow: 0 8px 30px rgba(74,222,128,.28);
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(74,222,128,.4); }
+  .btn-ghost {
+    background: var(--surface); color: var(--text); border-color: var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface-2); transform: translateY(-3px); }
+
+  .hero-stats {
+    display: flex; gap: 44px; margin-top: 64px; flex-wrap: wrap;
+  }
+  .stat-num {
+    font-size: 2rem; font-weight: 800; letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .stat-lbl { font-size: .82rem; color: var(--text-dim); font-weight: 600; }
+
+  /* ============ SECTIONS ============ */
+  section { padding: 100px 24px; position: relative; }
+  section:nth-of-type(even) { background: var(--bg-alt); }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+
+  .sec-head { margin-bottom: 56px; max-width: 780px; }
+  .sec-tag {
+    display: inline-block; font-size: .78rem; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 14px;
+  }
+  .sec-head h2 {
+    font-size: clamp(1.8rem, 4.2vw, 2.9rem);
+    line-height: 1.15; letter-spacing: -1.2px; font-weight: 800;
+    margin-bottom: 18px;
+  }
+  .sec-head p { color: var(--text-dim); font-size: 1.05rem; }
+
+  /* ============ CARDS ============ */
+  .grid { display: grid; gap: 22px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 30px;
+    transition: .3s; position: relative; overflow: hidden;
+  }
+  .card:hover {
+    border-color: rgba(74,222,128,.4);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+  }
+  .card h3 {
+    font-size: 1.22rem; font-weight: 750; margin-bottom: 12px;
+    letter-spacing: -.4px;
+  }
+  .card p { color: var(--text-dim); font-size: .94rem; }
+  .card-icon {
+    width: 48px; height: 48px; border-radius: 13px;
+    display: grid; place-items: center; font-size: 1.4rem;
+    margin-bottom: 18px;
+    background: rgba(74,222,128,.12); border: 1px solid rgba(74,222,128,.25);
+  }
+  .card-icon.b { background: rgba(56,189,248,.12); border-color: rgba(56,189,248,.25); }
+  .card-icon.y { background: rgba(251,191,36,.12); border-color: rgba(251,191,36,.25); }
+  .card-icon.p { background: rgba(244,114,182,.12); border-color: rgba(244,114,182,.25); }
+
+  /* ============ QUOTE / CALLOUT ============ */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(74,222,128,.06);
+    padding: 20px 26px; border-radius: 0 12px 12px 0;
+    margin: 28px 0; font-size: .96rem;
+  }
+  .callout.blue { border-color: var(--accent-2); background: rgba(56,189,248,.06); }
+  .callout.yellow { border-color: var(--accent-3); background: rgba(251,191,36,.06); }
+  .callout strong { color: var(--text); }
+
+  /* ============ LISTS ============ */
+  .tick { list-style: none; display: grid; gap: 11px; }
+  .tick li {
+    display: flex; gap: 11px; align-items: flex-start;
+    font-size: .93rem; color: var(--text-dim);
+  }
+  .tick li::before {
+    content: '→'; color: var(--accent); font-weight: 800; flex-shrink: 0;
+  }
+  .tick strong { color: var(--text); }
+
+  /* ============ TABLE ============ */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; min-width: 620px; font-size: .9rem; }
+  thead { background: var(--surface-2); }
+  th {
+    text-align: left; padding: 16px 20px; font-weight: 750;
+    font-size: .78rem; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--accent); border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 15px 20px; border-bottom: 1px solid var(--border);
+    color: var(--text-dim); vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.02); }
+  td strong { color: var(--text); }
+
+  .lvl {
+    display: inline-block; padding: 3px 11px; border-radius: 100px;
+    font-size: .74rem; font-weight: 800; letter-spacing: .4px;
+  }
+  .lvl.a { background: rgba(74,222,128,.15); color: var(--accent); }
+  .lvl.b { background: rgba(56,189,248,.15); color: var(--accent-2); }
+  .lvl.c { background: rgba(251,191,36,.15); color: var(--accent-3); }
+  .lvl.d { background: rgba(244,114,182,.15); color: var(--accent-4); }
+
+  /* ============ ACCORDION (inteligências) ============ */
+  .acc { display: grid; gap: 12px; }
+  .acc-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; transition: .25s;
+  }
+  .acc-item.open { border-color: rgba(56,189,248,.45); }
+  .acc-btn {
+    width: 100%; background: none; border: none; cursor: pointer;
+    padding: 20px 24px; display: flex; align-items: center; gap: 16px;
+    color: var(--text); font-family: inherit; font-size: 1rem;
+    font-weight: 700; text-align: left; transition: .2s;
+  }
+  .acc-btn:hover { background: rgba(255,255,255,.025); }
+  .acc-num {
+    width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
+    display: grid; place-items: center; font-size: .85rem; font-weight: 800;
+    background: var(--surface-2); color: var(--accent-2);
+  }
+  .acc-arrow {
+    margin-left: auto; color: var(--text-dim); font-size: .8rem;
+    transition: transform .3s; flex-shrink: 0;
+  }
+  .acc-item.open .acc-arrow { transform: rotate(180deg); }
+  .acc-body {
+    max-height: 0; overflow: hidden; transition: max-height .38s ease;
+  }
+  .acc-content {
+    padding: 0 24px 26px 74px; color: var(--text-dim); font-size: .93rem;
+  }
+  .acc-content h4 {
+    color: var(--text); font-size: .88rem; margin: 18px 0 10px;
+    text-transform: uppercase; letter-spacing: 1.2px;
+  }
+  .acc-content h4:first-child { margin-top: 0; }
+  @media (max-width: 640px) {
+    .acc-content { padding-left: 24px; }
+  }
+
+  /* ============ TABS (pets) ============ */
+  .tabs {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px;
+  }
+  .tab {
+    padding: 11px 24px; border-radius: 12px; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-dim); font-weight: 700; font-size: .9rem;
+    font-family: inherit; transition: .25s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .tab:hover { background: var(--surface-2); color: var(--text); }
+  .tab.active {
+    background: linear-gradient(135deg, var(--accent), #22c55e);
+    color: #04121a; border-color: transparent;
+    box-shadow: 0 6px 24px rgba(74,222,128,.25);
+  }
+  .panel { display: none; animation: fadeUp .4s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ CHECKLIST ============ */
+  .check-grid { display: grid; gap: 10px; }
+  .check-item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 15px 20px; border-radius: 12px;
+    cursor: pointer; transition: .22s; user-select: none;
+  }
+  .check-item:hover { border-color: rgba(74,222,128,.35); }
+  .check-item.done { opacity: .55; border-color: rgba(74,222,128,.5); }
+  .check-item.done .check-label { text-decoration: line-through; }
+  .box {
+    width: 22px; height: 22px; border-radius: 7px; flex-shrink: 0;
+    border: 2px solid var(--border); display: grid; place-items: center;
+    font-size: .75rem; color: transparent; transition: .2s;
+  }
+  .check-item.done .box {
+    background: var(--accent); border-color: var(--accent); color: #04121a;
+  }
+  .check-label { font-size: .93rem; font-weight: 600; }
+
+  /* ============ FOOTER ============ */
+  footer {
+    padding: 60px 24px 40px; border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .foot-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; justify-content: space-between; gap: 30px; flex-wrap: wrap;
+    align-items: center;
+  }
+  footer p { color: var(--text-dim); font-size: .87rem; }
+  .foot-links { display: flex; gap: 22px; flex-wrap: wrap; }
+  .foot-links a {
+    color: var(--text-dim); text-decoration: none; font-size: .87rem;
+    transition: .2s;
+  }
+  .foot-links a:hover { color: var(--accent); }
+
+  /* ============ REVEAL ANIM ============ */
+  .reveal { opacity: 0; transform: translateY(28px); transition: .7s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ============ MOBILE ============ */
+  @media (max-width: 880px) {
+    .burger { display: grid; place-items: center; }
+    .nav-links {
+      position: absolute; top: 68px; left: 0; right: 0;
+      background: var(--bg-alt); border-bottom: 1px solid var(--border);
+      flex-direction: column; padding: 14px; gap: 4px;
+      display: none;
+    }
+    .nav-links.open { display: flex; }
+    .nav-links a { display: block; padding: 12px 16px; }
+    section { padding: 72px 20px; }
+    .hero-stats { gap: 28px; }
+    .stat-num { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-mark">F</div>
+      FORJA
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#fundamentos">Fundamentos</a></li>
+      <li><a href="#forca-relativa">Força Relativa</a></li>
+      <li><a href="#forca-absoluta">Força Absoluta</a></li>
+      <li><a href="#inteligencias">Inteligências</a></li>
+      <li><a href="#pets">Pets</a></li>
+    </ul>
+    <button class="burger" id="burger" aria-label="Menu">☰</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="badge">Físico + Mental + Vida real</div>
+    <h1>Construa um corpo <span class="grad">forte</span><br>e uma mente <span class="grad">afiada</span>.</h1>
+    <p class="lead">
+      Um guia direto sobre força relativa, força absoluta, inteligência emocional
+      e as competências mentais que realmente mudam sua vida — sem enrolação,
+      sem fórmula mágica.
+    </p>
+    <div class="hero-cta">
+      <a href="#fundamentos" class="btn btn-primary">Começar agora →</a>
+      <a href="#pets" class="btn btn-ghost">Cuidar do pet 🐾</a>
+    </div>
+
+    <div class="hero-stats">
+      <div><div class="stat-num">5</div><div class="stat-lbl">Módulos práticos</div></div>
+      <div><div class="stat-num">7</div><div class="stat-lbl">Inteligências trabalhadas</div></div>
+      <div><div class="stat-num">3</div><div class="stat-lbl">Tipos de pet</div></div>
+      <div><div class="stat-num">0</div><div class="stat-lbl">Desculpas aceitas</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="fundamentos">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-tag">Módulo A</span>
+      <h2>O que é força e o que é cognição?</h2>
+      <p>Antes de treinar qualquer coisa, você precisa entender o que está treinando. Força e cognição não são coisas separadas — são dois motores do mesmo sistema.</p>
+    </div>
+
+    <div class="grid g2">
+      <div class="card reveal">
+        <div class="card-icon">💪</div>
+        <h3>Força</h3>
+        <p>Força é a <strong>capacidade do sistema neuromuscular de produzir tensão contra uma resistência</strong>. Não é sinônimo de músculo grande nem de "ser brutamontes" — é uma habilidade do sistema nervoso tanto quanto do tecido muscular.</p>
+        <div class="callout"><strong>Fator chave:</strong> nas primeiras semanas de treino, quase todo ganho de força vem de adaptação <em>neural</em> (recrutamento, frequência de disparo, sincronização de unidades motoras) — não de músculo novo.</div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon b">🧠</div>
+        <h3>Cognição</h3>
+        <p>Cognição é o conjunto de <strong>processos mentais</strong> que usamos para perceber, aprender, memorizar, raciocinar, resolver problemas, tomar decisões e regular emoções. É o "software" que roda no seu cérebro.</p>
+        <div class="callout blue"><strong>Fator chave:</strong> a cognição não é fixa. Neuroplasticidade significa que atenção, memória de trabalho e controle inibitório <em>melhoram</em> com treino deliberado — igual a um músculo.</div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:22px">
+      <div class="card reveal">
+        <div class="card-icon y">⚡</div>
+        <h3>Os dois se conectam</h3>
+        <p>Exercício físico aeróbico e de força melhora:</p>
+        <ul class="tick" style="margin-top:14px">
+          <li><strong>BDNF</strong> — fator de crescimento que sustenta a neuroplasticidade</li>
+          <li><strong>Fluxo sanguíneo cerebral</strong> em regiões de memória e atenção</li>
+          <li><strong>Controle executivo</strong> — foco, inibição de impulso, planejamento</li>
+          <li><strong>Regulação emocional</strong> via eixo hormonal e sono de qualidade</li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon p">🎯</div>
+        <h3>Definições que importam</h3>
+        <ul class="tick" style="margin-top:6px">
+          <li><strong>Força relativa</strong> — força dividida pelo peso corporal. Rei da calistenia, escalada, ginástica, artes marciais.</li>
+          <li><strong>Força absoluta</strong> — a força total que você produz, independente do peso. Rei do levantamento básico, powerlifting, strongman.</li>
+          <li><strong>Inteligência</strong> — aqui tratada como <em>competência treinável</em>, não como número de QI.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout yellow reveal" style="margin-top:34px"><strong>Regra de ouro:</strong> você não precisa escolher entre força relativa e absoluta. Quem treina bem constrói as duas — só muda o <em>ênfase</em> e a <em>periodização</em>.</div>
+  </div>
+</section>
+
+<section id="forca-relativa">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-tag">Módulo B</span>
+      <h2>Força relativa extremamente alta</h2>
+      <p>Objetivo: mover <strong>seu próprio corpo</strong> com controle absoluto em posições desfavoráveis. Aqui a calistenia e a ginástica são imbatíveis — porque a resistência é você mesmo.</p>
+    </div>
+
+    <div class="grid g3">
+      <div class="card reveal">
+        <div class="card-icon">1</div>
+        <h3>Domine o básico pesado</h3>
+        <p>Sem exceções. Antes de skills, construa base:</p>
+        <ul class="tick" style="margin-top:14px">
+          <li>20+ flexões estritas</li><li>10+ barras pronadas limpas</li><li>15+ dips em paralelas</li><li>60s de prancha + hollow body</li><li>5+ agachamento pistola por perna</li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon b">2</div>
+        <h3>Aplique tensão total</h3>
+        <p>Força relativa é tanto <strong>técnica</strong> quanto músculo. Você precisa aprender a irradiar tensão:</p>
+        <ul class="tick" style="margin-top:14px">
+          <li>Aperte a barra como se fosse esmagá-la</li><li>Contraia glúteo e abdômen em todo movimento</li><li>Pernas rígidas, corpo em bloco (hollow)</li><li>Respire atrás do escudo abdominal</li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon y">3</div>
+        <h3>Reduza peso morto</h3>
+        <p>Força relativa = força ÷ peso. Você pode aumentar o numerador <em>ou</em> diminuir o denominador.</p>
+        <ul class="tick" style="margin-top:14px">
+          <li>Mantenha gordura corporal em faixa atlética</li><li>Não faça "bulk sujo" se seu objetivo é relative</li><li>Priorize proteína: 1,6–2,2 g/kg</li><li>Sono é o anabólico mais barato que existe</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="reveal" style="margin:56px 0 20px; font-size:1.4rem; letter-spacing:-.5px;">Progressões de calistenia — do zero ao avançado</h3>
+
+    <div class="table-wrap reveal">
+      <table>
+        <thead><tr><th>Skill</th><th>Nível 1 — Base</th><th>Nível 2 — Intermediário</th><th>Nível 3 — Avançado</th><th>Nível 4 — Elite</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Flexão</strong></td><td>Inclinada / parede</td><td>Flexão completa 15+</td><td>Archer / pseudo-planche</td><td>One-arm push-up</td></tr>
+          <tr><td><strong>Barra fixa</strong></td><td>Negativas controladas</td><td>8–12 reps estritas</td><td>Archer pull-up, L-sit pull</td><td>One-arm pull-up</td></tr>
+          <tr><td><strong>Dips</strong></td><td>Banco / assistido</td><td>12+ paralelas</td><td>Ring dips, Korean dips</td><td>One-arm dip</td></tr>
+          <tr><td><strong>Pernas</strong></td><td>Agachamento livre</td><td>Búlgaro, pistola assistida</td><td>Pistola completa 5+</td><td>Shrimp squat, sissy</td></tr>
+          <tr><td><strong>Core</strong></td><td>Prancha 60s</td><td>Hollow body, leg raise</td><td>L-sit 20s+, dragon flag</td><td>Front lever, V-sit</td></tr>
+          <tr><td><strong>Equilíbrio</strong></td><td>Parada de cabeça na parede</td><td>Handstand livre 10s</td><td>Handstand push-up</td><td>One-arm handstand</td></tr>
+          <tr><td><strong>Estático (puxar)</strong></td><td>Tuck front lever</td><td>Advanced tuck FL</td><td>Straddle front lever</td><td>Full front lever</td></tr>
+          <tr><td><strong>Estático (empurrar)</strong></td><td>Pseudo planche lean</td><td>Tuck planche</td><td>Straddle planche</td><td>Full planche</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid g2" style="margin-top:40px">
+      <div class="card reveal">
+        <div class="card-icon">🔁</div>
+        <h3>Método: como progredir de verdade</h3>
+        <ul class="tick" style="margin-top:6px">
+          <li><strong>Progressão por alavanca</strong> — mude o ângulo/posição antes de adicionar peso</li>
+          <li><strong>Progressão por tempo</strong> — segure o estático 5s a mais</li>
+          <li><strong>Progressão por reps</strong> — adicione 1 rep por treino</li>
+          <li><strong>Progressão por tempo sob tensão</strong> — desça em 5s (excêntrica lenta)</li>
+          <li><strong>Progressão por peso</strong> — colete +2kg no colete/cinto</li>
+        </ul>
+        <div class="callout" style="margin-bottom:0">Escolha <strong>UMA</strong> variável por ciclo de 4–6 semanas. Mude tudo de uma vez e você não sabe o que funcionou.</div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon b">📅</div>
+        <h3>Estrutura semanal sugerida</h3>
+        <ul class="tick" style="margin-top:6px">
+          <li><strong>Seg</strong> — Empurrar (flexões, dips, handstand)</li><li><strong>Ter</strong> — Pernas + core</li><li><strong>Qua</strong> — Puxar (barra, remada, front lever)</li><li><strong>Qui</strong> — Mobilidade + skill practice leve</li><li><strong>Sex</strong> — Full body + estáticos</li><li><strong>Sáb</strong> — Skill work (handstand, planche lean)</li><li><strong>Dom</strong> — Descanso ativo (caminhada, alongamento)</li>
+        </ul>
+        <div class="callout blue" style="margin-bottom:0">Skills (handstand, planche, lever) treine <strong>fresco</strong>, no início da sessão, com séries curtas e alta qualidade. Fadiga destrói skill.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="forca-absoluta">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-tag">Módulo C</span>
+      <h2>Força absoluta muito alta</h2>
+      <p>Objetivo: produzir o <strong>máximo de força bruta</strong>, independente do peso corporal. Aqui entram barra, anilhas e as leis da tensão mecânica.</p>
+    </div>
+
+    <div class="grid g3">
+      <div class="card reveal">
+        <div class="card-icon">🏋️</div>
+        <h3>Os 5 levantamentos-base</h3>
+        <ul class="tick" style="margin-top:6px">
+          <li><strong>Agachamento (squat)</strong> — base de tudo</li><li><strong>Levantamento terra (deadlift)</strong> — força de cadeia posterior</li><li><strong>Supino (bench press)</strong> — empurrar horizontal</li><li><strong>Desenvolvimento militar (OHP)</strong> — empurrar vertical</li><li><strong>Remada curvada / barra fixa pesada</strong> — puxar</li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon y">📊</div>
+        <h3>Zonas de intensidade</h3>
+        <ul class="tick" style="margin-top:6px">
+          <li><strong>90–100% 1RM</strong> — 1–3 reps · força neural máxima</li><li><strong>80–90%</strong> — 3–6 reps · força + hipertrofia</li><li><strong>70–80%</strong> — 6–12 reps · hipertrofia</li><li><strong>60–70%</strong> — 12–20 reps · resistência muscular</li><li><strong>40–60%</strong> — potência / velocidade (com barra rápida)</li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon p">⏱️</div>
+        <h3>Descanso é parte do treino</h3>
+        <ul class="tick" style="margin-top:6px">
+          <li><strong>3–5 min</strong> entre séries pesadas (força)</li><li><strong>1,5–2 min</strong> para hipertrofia</li><li><strong>45–90s</strong> para resistência</li><li>Descanso curto demais = menos carga = menos força</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="reveal" style="margin:56px 0 20px; font-size:1.4rem; letter-spacing:-.5px;">Metas de força por nível (peso corporal múltiplo)</h3>
+
+    <div class="table-wrap reveal">
+      <table>
+        <thead><tr><th>Levantamento</th><th>Iniciante</th><th>Intermediário</th><th>Avançado</th><th>Elite</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Agachamento</strong></td><td><span class="lvl a">0,75× PC</span></td><td><span class="lvl b">1,25× PC</span></td><td><span class="lvl c">1,75× PC</span></td><td><span class="lvl d">2,5× PC</span></td></tr>
+          <tr><td><strong>Terra</strong></td><td><span class="lvl a">1× PC</span></td><td><span class="lvl b">1,5× PC</span></td><td><span class="lvl c">2,25× PC</span></td><td><span class="lvl d">3× PC</span></td></tr>
+          <tr><td><strong>Supino</strong></td><td><span class="lvl a">0,5× PC</span></td><td><span class="lvl b">0,9× PC</span></td><td><span class="lvl c">1,3× PC</span></td><td><span class="lvl d">1,75× PC</span></td></tr>
+          <tr><td><strong>OHP</strong></td><td><span class="lvl a">0,35× PC</span></td><td><span class="lvl b">0,6× PC</span></td><td><span class="lvl c">0,85× PC</span></td><td><span class="lvl d">1,1× PC</span></td></tr>
+          <tr><td><strong>Barra fixa (peso extra)</strong></td><td><span class="lvl a">+0× PC</span></td><td><span class="lvl b">+0,25× PC</span></td><td><span class="lvl c">+0,5× PC</span></td><td><span class="lvl d">+0,85× PC</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid g2" style="margin-top:40px">
+      <div class="card reveal">
+        <div class="card-icon">🔺</div>
+        <h3>Periodização que funciona</h3>
+        <ul class="tick" style="margin-top:6px">
+          <li><strong>Acumulação (3–4 sem)</strong> — volume alto, intensidade moderada (70–80%)</li><li><strong>Intensificação (2–3 sem)</strong> — volume cai, intensidade sobe (85–95%)</li><li><strong>Pico (1 sem)</strong> — testar 1RM ou PR</li><li><strong>Deload (1 sem)</strong> — 50% do volume, mesma intensidade leve</li>
+        </ul>
+        <div class="callout" style="margin-bottom:0"><strong>Deload não é preguiça.</strong> É quando o corpo transforma o estímulo em adaptação. Sem ele, você estagna e se machuca.</div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon b">⚙️</div>
+        <h3>Detalhes técnicos que ninguém fala</h3>
+        <ul class="tick" style="margin-top:6px">
+          <li><strong>Bracing</strong> — pressão intra-abdominal antes de cada rep pesada</li><li><strong>Leg drive</strong> no supino — força vem do chão, não só do peito</li><li><strong>Lat engagement</strong> no terra — a barra raspa na canela porque os dorsais puxam</li><li><strong>Ritmo</strong> — 2s descida, 0s pausa, explosão na subida</li><li><strong>Grip</strong> — antebraço é o elo fraco; treine pegada separadamente</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout yellow reveal" style="margin-top:34px"><strong>Lembrete:</strong> força absoluta sem mobilidade vira lesão. Sempre acompanhe com trabalho de mobilidade de quadril, ombro e tornozelo.</div>
+  </div>
+</section>
+
+<section id="inteligencias">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-tag">Módulo D</span>
+      <h2>Inteligências: como <em>melhorar</em>, não só "aumentar"</h2>
+      <p>Inteligência aqui é competência treinável. A ideia não é virar gênio da noite pro dia, é <strong>melhorar de forma consistente</strong> com prática deliberada, feedback e reflexão.</p>
+    </div>
+
+    <div class="callout blue reveal"><strong>Princípio central:</strong> melhora real vem de <em>prática deliberada</em> — tarefa específica + dificuldade calibrada + feedback imediato + repetição com ajuste. Sem esses 4 elementos, é só repetição vazia.</div>
+
+    <div class="acc" id="acc">
+      <div class="acc-item reveal"><button class="acc-btn"><span class="acc-num">01</span>Inteligência Emocional<span class="acc-arrow">▼</span></button><div class="acc-body"><div class="acc-content"><h4>O que é</h4><p>Reconhecer, entender e regular as próprias emoções, e perceber as emoções dos outros.</p><h4>Como melhorar</h4><ul class="tick"><li><strong>Nomeie a emoção</strong> — "estou frustrado", "estou ansioso". Nomear reduz a intensidade (affect labeling).</li><li><strong>Diário emocional</strong> — 3 linhas: o que aconteceu, o que senti, o que fiz. Faça por 30 dias.</li><li><strong>Pausa de 6 segundos</strong> — antes de reagir a algo que te ativou, respire 6s. Isso dá tempo ao córtex pré-frontal.</li><li><strong>Reavalie a narrativa</strong> — "isso é um desastre" vira "isso é difícil, mas administrável".</li></ul></div></div></div>
+
+      <div class="acc-item reveal"><button class="acc-btn"><span class="acc-num">02</span>Inteligência Interpessoal<span class="acc-arrow">▼</span></button><div class="acc-body"><div class="acc-content"><h4>O que é</h4><p>Entender e se relacionar bem com outras pessoas — empatia, comunicação, leitura social.</p><h4>Como melhorar</h4><ul class="tick"><li><strong>Escuta ativa real</strong> — ouça para entender, não para responder. Repita o que a pessoa disse antes de dar sua opinião.</li><li><strong>Perguntas abertas</strong> — troque "você está bem?" por "como você está se sentindo com isso?".</li><li><strong>Observe linguagem corporal</strong> — tom, postura, ritmo. 70% da comunicação é não-verbal.</li><li><strong>Feedback com cuidado</strong> — use modelo SBI: Situação, Comportamento, Impacto.</li><li><strong>Converse com quem pensa diferente</strong> — diversidade de convivência treina empatia.</li></ul></div></div></div>
+
+      <div class="acc-item reveal"><button class="acc-btn"><span class="acc-num">03</span>Inteligência Intrapessoal<span class="acc-arrow">▼</span></button><div class="acc-body"><div class="acc-content"><h4>O que é</h4><p>Autoconhecimento: entender seus valores, limites, motivações e padrões de comportamento.</p><h4>Como melhorar</h4><ul class="tick"><li><strong>Journaling</strong> — escreva 10 minutos por dia sem filtro. Depois releia semanalmente.</li><li><strong>Defina valores</strong> — escolha 5 valores centrais e questione: minhas ações refletem isso?</li><li><strong>Peça feedback honesto</strong> — pergunte a 3 pessoas próximas: "qual ponto cego você vê em mim?".</li><li><strong>Meditação de auto-observação</strong> — 10 min/dia observando pensamentos sem julgar.</li><li><strong>Revise decisões</strong> — mensalmente, releia escolhas importantes e o que aprendeu.</li></ul></div></div></div>
+
+      <div class="acc-item reveal"><button class="acc-btn"><span class="acc-num">04</span>Autocontrole<span class="acc-arrow">▼</span></button><div class="acc-body"><div class="acc-content"><h4>O que é</h4><p>Capacidade de inibir impulsos, adiar recompensa e manter ação alinhada com objetivos de longo prazo.</p><h4>Como melhorar</h4><ul class="tick"><li><strong>Regra dos 10 minutos</strong> — antes de ceder a um impulso, espere 10 min. A urgência cai.</li><li><strong>Reduza atrito</strong> — tire o celular do quarto, deixe o tênis na porta. Ambiente > força de vontade.</li><li><strong>Implemente intenções</strong> — "SE for 20h, ENTÃO vou treinar" — planos condicionais reduzem decisão consciente.</li><li><strong>Treine atenção sustentada</strong> — foco em uma tarefa por 25 min sem interrupção (Pomodoro).</li><li><strong>Durma bem</strong> — privação de sono derruba autocontrole mais que qualquer outra coisa.</li></ul></div></div></div>
+
+      <div class="acc-item reveal"><button class="acc-btn"><span class="acc-num">05</span>Lógico-Matemática<span class="acc-arrow">▼</span></button><div class="acc-body"><div class="acc-content"><h4>O que é</h4><p>Raciocínio abstrato, reconhecimento de padrões, dedução e resolução estruturada de problemas.</p><h4>Como melhorar</h4><ul class="tick"><li><strong>Resolva problemas difíceis</strong> — xadrez, Sudoku, Project Euler, matemática discreta.</li><li><strong>Aprenda programação</strong> — Python é a porta de entrada; lógica condicional e loops treinam raciocínio estruturado.</li><li><strong>Estude estatística básica</strong> — entender probabilidade muda como você interpreta o mundo.</li><li><strong>Explique em voz alta</strong> — técnica Feynman: se você não consegue explicar simples, não entendeu.</li><li><strong>Escreva provas</strong> — formalize raciocínios por escrito; força clareza lógica.</li></ul></div></div></div>
+
+      <div class="acc-item reveal"><button class="acc-btn"><span class="acc-num">06</span>Linguística<span class="acc-arrow">▼</span></button><div class="acc-body"><div class="acc-content"><h4>O que é</h4><p>Habilidade de usar linguagem — falar, escrever, ler, argumentar e aprender idiomas.</p><h4>Como melhorar</h4><ul class="tick"><li><strong>Leia todos os dias</strong> — 20 minutos. Ficção melhora empatia; não-ficção, argumentação.</li><li><strong>Escreva diariamente</strong> — 200 palavras sobre qualquer coisa. Escrever é pensar com clareza.</li><li><strong>Aprenda um idioma novo</strong> — 15 min/dia de prática ativa (falar, não só ouvir).</li><li><strong>Amplie vocabulário</strong> — aprenda 3 palavras novas por dia e USE-as na mesma semana.</li><li><strong>Resuma o que leu</strong> — em 3 frases. Se não conseguir, não absorveu.</li></ul></div></div></div>
+
+      <div class="acc-item reveal"><button class="acc-btn"><span class="acc-num">07</span>Espacial<span class="acc-arrow">▼</span></button><div class="acc-body"><div class="acc-content"><h4>O que é</h4><p>Visualizar, manipular e navegar mentalmente em objetos e espaços tridimensionais.</p><h4>Como melhorar</h4><ul class="tick"><li><strong>Desenhe à mão</strong> — esboços, perspectiva, mapas mentais. Desenhar treina rotação mental.</li><li><strong>Resolva cubo mágico e puzzles 3D</strong> — rotação mental é treinável diretamente.</li><li><strong>Pratique esportes com leitura espacial</strong> — escalada, skate, malabarismo, dança.</li><li><strong>Use mapas em vez de GPS</strong> — navegar desenvolve hipocampo e memória espacial.</li><li><strong>Monte e desmonte coisas</strong> — Lego, móveis, eletrônicos. Mão na massa = cérebro espacial.</li></ul></div></div></div>
+    </div>
+
+    <div class="callout reveal" style="margin-top:40px"><strong>Como aplicar tudo isso:</strong> escolha <em>UMA</em> inteligência por mês. Monte um hábito de 10–20 min/dia ligado a ela. Um mês é suficiente para sentir diferença — seis meses muda sua vida.</div>
+  </div>
+</section>
+
+<section id="pets">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-tag">Módulo Extra</span>
+      <h2>Cuidar bem do seu animal de estimação</h2>
+      <p>Se você treina disciplina, ela também vale para quem depende de você. Um pet bem cuidado é reflexo de uma rotina bem cuidada.</p>
+    </div>
+
+    <div class="tabs reveal">
+      <button class="tab active" data-tab="gato">🐱 Gato</button>
+      <button class="tab" data-tab="cachorro">🐶 Cachorro</button>
+      <button class="tab" data-tab="passaro">🐦 Passarinho</button>
+    </div>
+
+    <div class="panel active" id="gato">
+      <div class="grid g2">
+        <div class="card"><div class="card-icon">🍽️</div><h3>Alimentação</h3><ul class="tick" style="margin-top:6px"><li><strong>Rica em proteína animal</strong> — gato é carnívoro obrigatório</li><li><strong>Água corrente</strong> — fonte ou bebedouro; gatos bebem pouco por instinto</li><li><strong>Ração úmida</strong> ajuda na hidratação e saúde renal</li><li><strong>Evite</strong>: cebola, alho, chocolate, uva, leite (intolerância comum)</li><li><strong>Porções medidas</strong> — obesidade felina é epidemia silenciosa</li></ul></div>
+        <div class="card"><div class="card-icon b">🏠</div><h3>Ambiente</h3><ul class="tick" style="margin-top:6px"><li><strong>Caixa de areia</strong> — 1 por gato + 1 extra, limpa diariamente</li><li><strong>Arranhadores verticais</strong> — protege seu sofá e dá território</li><li><strong>Esconderijos altos</strong> — prateleiras, nichos, caixas</li><li><strong>Janela telada</strong> — estímulo visual seguro</li><li><strong>Rotina previsível</strong> — gatos odeiam imprevisto</li></ul></div>
+        <div class="card"><div class="card-icon y">🎾</div><h3>Estímulo mental</h3><ul class="tick" style="margin-top:6px"><li><strong>Brincadeira ativa</strong> — 2 sessões de 10 min/dia com varinha</li><li><strong>Comedouro puzzle</strong> — simula caça, reduz tédio</li><li><strong>Rodízio de brinquedos</strong> — troque a cada 3 dias</li><li><strong>Catnip</strong> ocasional — enriquecimento sensorial</li></ul></div>
+        <div class="card"><div class="card-icon p">🩺</div><h3>Saúde</h3><ul class="tick" style="margin-top:6px"><li><strong>Vermífugo</strong> a cada 3–4 meses</li><li><strong>Vacinas</strong> anuais (V3/V4, raiva)</li><li><strong>Castração</strong> — evita doenças e comportamentos de fuga</li><li><strong>Escovação de pelos</strong> — reduz bola de pelo</li><li><strong>Corte de unhas</strong> a cada 2–3 semanas</li><li><strong>Check-up</strong> anual com vet (idosos: semestral)</li></ul></div>
+      </div>
+    </div>
+
+    <div class="panel" id="cachorro">
+      <div class="grid g2">
+        <div class="card"><div class="card-icon">🍖</div><h3>Alimentação</h3><ul class="tick" style="margin-top:6px"><li><strong>Ração de qualidade</strong> adequada ao porte e idade</li><li><strong>Horários fixos</strong> — 2 refeições/dia para adultos</li><li><strong>Evite</strong>: chocolate, uva, cebola, ossos cozidos, xilitol</li><li><strong>Água fresca</strong> sempre disponível</li><li><strong>Petiscos</strong> até 10% das calorias diárias</li></ul></div>
+        <div class="card"><div class="card-icon b">🚶</div><h3>Exercício e rotina</h3><ul class="tick" style="margin-top:6px"><li><strong>Passeios diários</strong> — mínimo 2×, ideal 3×</li><li><strong>Raças energéticas</strong> (border, husky): 1–2h/dia de atividade</li><li><strong>Raças calmas</strong> (bulldog, shih-tzu): 30–45 min/dia</li><li><strong>Cheirar é exercício</strong> — 10 min de sniffari cansam mais que correr</li><li><strong>Socialização</strong> desde filhote — com outros cães, pessoas, ambientes</li></ul></div>
+        <div class="card"><div class="card-icon y">🎓</div><h3>Treino e mente</h3><ul class="tick" style="margin-top:6px"><li><strong>Reforço positivo</strong> — recompensa, nunca punição física</li><li><strong>Comandos básicos</strong> — senta, deita, fica, vem, junto</li><li><strong>Enriquecimento ambiental</strong> — tapete de olfato, kong recheado</li><li><strong>5 min de treino</strong> por sessão, 2–3×/dia (foco curto)</li><li><strong>Rotina previsível</strong> reduz ansiedade de separação</li></ul></div>
+        <div class="card"><div class="card-icon p">🩺</div><h3>Saúde</h3><ul class="tick" style="margin-top:6px"><li><strong>Vacinas</strong> — V8/V10, antirrábica, gripe canina</li><li><strong>Vermífugo</strong> a cada 3–4 meses</li><li><strong>Antipulgas e carrapatos</strong> mensal</li><li><strong>Banho</strong> a cada 15–30 dias (depende da raça)</li><li><strong>Escovação de dentes</strong> 2–3× por semana</li><li><strong>Check-up</strong> anual, idosos semestral</li></ul></div>
+      </div>
+    </div>
+
+    <div class="panel" id="passaro">
+      <div class="grid g2">
+        <div class="card"><div class="card-icon">🌾</div><h3>Alimentação</h3><ul class="tick" style="margin-top:6px"><li><strong>Mistura específica</strong> para a espécie (não é "ração de pássaro" genérica)</li><li><strong>Frutas e verduras</strong> frescas — maçã, cenoura, couve, brócolis</li><li><strong>Cálcio/cálcio</strong> — osso de siba ou pedra mineral sempre disponível</li><li><strong>Evite</strong>: abacate, chocolate, cafeína, álcool, sementes salgadas</li><li><strong>Água limpa</strong> trocada 2× ao dia</li></ul></div>
+        <div class="card"><div class="card-icon b">🏡</div><h3>Gaiola e ambiente</h3><ul class="tick" style="margin-top:6px"><li><strong>Gaiola grande</strong> — o pássaro precisa voar de ponta a ponta</li><li><strong>Longe de correntes de ar</strong>, cozinha (Teflon é tóxico!) e fumaça</li><li><strong>Poleiros de madeira natural</strong> — variar diâmetro para as patas</li><li><strong>Brinquedos rotativos</strong> — espelho com moderação (pode causar fixação)</li><li><strong>Higiene diária</strong> — trocar jornal, lavar comedouros</li><li><strong>Luz natural</strong> — ciclo dia/noite definido, 10–12h de sono</li></ul></div>
+        <div class="card"><div class="card-icon y">🧠</div><h3>Estímulo mental</h3><ul class="tick" style="margin-top:6px"><li><strong>Interação diária</strong> — conversa, presença, tempo fora da gaiola</li><li><strong>Forrageamento</strong> — esconda comida para ele procurar</li><li><strong>Brinquedos de destruir</strong> — papel, casca de árvore, cordas</li><li><strong>Variação de ambiente</strong> — mude brinquedos de lugar</li><li><strong>Treino de comandos</strong> — sim, pássaros aprendem (target, step-up)</li></ul></div>
+        <div class="card"><div class="card-icon p">🩺</div><h3>Saúde</h3><ul class="tick" style="margin-top:6px"><li><strong>Vet de aves</strong> — nem todo veterinário atende pássaros</li><li><strong>Sinais de alerta</strong>: penas eriçadas, apatia, fezes alteradas</li><li><strong>Banho</strong> — tigela rasa ou borrifar água morna</li><li><strong>Corte de unhas e bico</strong> — só com profissional</li><li><strong>Check-up</strong> anual</li></ul></div>
+      </div>
+    </div>
+
+    <div class="callout yellow" style="margin-top:40px"><strong>Regra universal:</strong> pet não é enfeite. É um ser vivo com necessidades físicas, mentais e emocionais. Rotina, previsibilidade e atenção são tão importantes quanto comida e água.</div>
+  </div>
+</section>
+
+<section id="checklist">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-tag">Fechamento</span>
+      <h2>Seu checklist de partida</h2>
+      <p>Marque o que você já faz. O que ficar vazio é onde está sua próxima evolução. (Salva automaticamente no seu navegador.)</p>
+    </div>
+
+    <div class="check-grid" id="checkGrid">
+      <div class="check-item" data-key="c1"><div class="box">✓</div><span class="check-label">Treino de força 3× ou mais por semana</span></div>
+      <div class="check-item" data-key="c2"><div class="box">✓</div><span class="check-label">Tenho uma progressão clara nos exercícios que faço</span></div>
+      <div class="check-item" data-key="c3"><div class="box">✓</div><span class="check-label">Durmo 7–9h com regularidade</span></div>
+      <div class="check-item" data-key="c4"><div class="box">✓</div><span class="check-label">Como proteína suficiente (1,6 g/kg ou mais)</span></div>
+      <div class="check-item" data-key="c5"><div class="box">✓</div><span class="check-label">Escrevo ou reflito sobre minhas emoções regularmente</span></div>
+      <div class="check-item" data-key="c6"><div class="box">✓</div><span class="check-label">Leio algo por prazer ou estudo todos os dias</span></div>
+      <div class="check-item" data-key="c7"><div class="box">✓</div><span class="check-label">Pratico atenção plena ou meditação</span></div>
+      <div class="check-item" data-key="c8"><div class="box">✓</div><span class="check-label">Tenho uma prática intencional de autocontrole (ex: reduzir celular)</span></div>
+      <div class="check-item" data-key="c9"><div class="box">✓</div><span class="check-label">Meu pet tem rotina, estímulo e cuidados em dia</span></div>
+      <div class="check-item" data-key="c10"><div class="box">✓</div><span class="check-label">Reviso meu progresso pelo menos 1× por mês</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="logo" style="margin-bottom:10px;"><div class="logo-mark">F</div> FORJA</div>
+      <p>Desenvolvimento físico e mental — sem atalhos.</p>
+    </div>
+    <div class="foot-links">
+      <a href="#fundamentos">Fundamentos</a><a href="#forca-relativa">Força Relativa</a><a href="#forca-absoluta">Força Absoluta</a><a href="#inteligencias">Inteligências</a><a href="#pets">Pets</a>
+    </div>
+  </div>
+  <div class="foot-inner" style="margin-top:30px; padding-top:26px; border-top:1px solid var(--border);">
+    <p>Conteúdo educativo. Consulte profissional de saúde antes de iniciar treinos intensos.</p><p>Feito com 💪 e 🧠</p>
+  </div>
+</footer>
+
+<script>
+const burger = document.getElementById('burger');
+const navLinks = document.getElementById('navLinks');
+burger.addEventListener('click', () => navLinks.classList.toggle('open'));
+navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+const bar = document.getElementById('progress-bar');
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (window.scrollY / h) * 100 + '%';
+}, { passive: true });
+
+const linkMap = {};
+document.querySelectorAll('.nav-links a').forEach(a => linkMap[a.getAttribute('href').slice(1)] = a);
+
+const spy = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+      const a = linkMap[e.target.id];
+      if (a) a.classList.add('active');
+    }
+  });
+}, { rootMargin: '-45% 0px -50% 0px' });
+
+document.querySelectorAll('section[id]').forEach(s => spy.observe(s));
+
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      revealObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach((el, i) => {
+  el.style.transitionDelay = (i % 4) * 70 + 'ms';
+  revealObs.observe(el);
+});
+
+document.querySelectorAll('.acc-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.parentElement;
+    const body = item.querySelector('.acc-body');
+    const isOpen = item.classList.contains('open');
+
+    document.querySelectorAll('.acc-item').forEach(other => {
+      other.classList.remove('open');
+      other.querySelector('.acc-body').style.maxHeight = null;
+    });
+
+    if (!isOpen) {
+      item.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(target).classList.add('active');
+  });
+});
+
+const STORAGE_KEY = 'forja_checklist_v1';
+const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+document.querySelectorAll('.check-item').forEach(item => {
+  const key = item.dataset.key;
+  if (saved[key]) item.classList.add('done');
+
+  item.addEventListener('click', () => {
+    item.classList.toggle('done');
+    saved[key] = item.classList.contains('done');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  });
+});
+
+window.addEventListener('resize', () => {
+  const open = document.querySelector('.acc-item.open .acc-body');
+  if (open) open.style.maxHeight = open.scrollHeight + 'px';
+});
+</script>
+
+</body>
+</html>
